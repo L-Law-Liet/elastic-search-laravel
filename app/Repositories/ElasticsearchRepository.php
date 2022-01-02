@@ -6,6 +6,7 @@ use App\Models\Article;
 use Elasticsearch\Client;
 use Illuminate\Support\Arr;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\Cache;
 
 class ElasticsearchRepository implements ArticlesRepository
 {
@@ -27,7 +28,9 @@ class ElasticsearchRepository implements ArticlesRepository
             'index' => $model->getSearchIndex(),
             'type' => $model->getSearchType(),
             'body' => [
-                'size' => Article::all()->count(),
+                'size' => Cache::rememberForever('articles', function () {
+                    return Article::all();
+                })->count(),
                 'query' => [
                     'multi_match' => [
                         'fields' => ['title^5', 'body', 'tags'],
@@ -41,9 +44,11 @@ class ElasticsearchRepository implements ArticlesRepository
     private function buildCollection(array $items): Collection
     {
         $ids = Arr::pluck($items['hits']['hits'], '_id');
-        return Article::findMany($ids)
-            ->sortBy(function ($article) use ($ids) {
-                return array_search($article->getKey(), $ids);
-            });
+        return Cache::rememberForever('articles' . json_encode($ids), function () use($ids) {
+            return Article::findMany($ids)
+                ->sortBy(function ($article) use ($ids) {
+                    return array_search($article->getKey(), $ids);
+                });
+        });
     }
 }

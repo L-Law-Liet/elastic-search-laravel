@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Article;
 use App\Repositories\ArticlesRepository;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 class ArticlesController extends Controller
 {
@@ -16,8 +17,9 @@ class ArticlesController extends Controller
     }
     public function index()
     {
-        return 1;
-        $articles = Article::all();
+        $articles = Cache::rememberForever('articles', function () {
+            return Article::all();
+        });
         return view('welcome', compact('articles'));
     }
 
