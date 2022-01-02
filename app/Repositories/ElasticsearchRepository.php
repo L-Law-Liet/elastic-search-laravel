@@ -27,6 +27,7 @@ class ElasticsearchRepository implements ArticlesRepository
             'index' => $model->getSearchIndex(),
             'type' => $model->getSearchType(),
             'body' => [
+                'size' => Article::all()->count(),
                 'query' => [
                     'multi_match' => [
                         'fields' => ['title^5', 'body', 'tags'],

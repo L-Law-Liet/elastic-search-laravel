@@ -1,0 +1,46 @@
+version: "3.7"
+
+services:
+  nginx:
+    build:
+      context: ./docker
+      dockerfile: Nginx.Dockerfile
+    ports:
+      - 80:80
+    links:
+      - fpm
+    volumes:
+        - ./:/var/www/elasticProject
+  fpm:
+    build:
+      context: ./docker
+      dockerfile: Fpm.Dockerfile
+    volumes:
+      - ./:/var/www/elasticProject
+    links:
+      - mysql
+  mysql:
+    image: mysql:8.0
+    restart: always
+    ports:
+      - 3306:3306
+    environment:
+      - MYSQL_ROOT_PASSWORD=${DB_PASSWORD}
+      - MYSQL_ALLOW_EMPTY_PASSWORD=1
+      - MYSQL_DATABASE=${DB_DATABASE}
+  admin:
+      image: phpmyadmin
+      restart: always
+      environment:
+          - PMA_ARBITRARY=1
+          - PMA_HOST=mysql
+          - PMA_PORT=3306
+      ports:
+        - 8081:80
+  es:
+      image: docker.elastic.co/elasticsearch/elasticsearch:7.16.2@sha256:055ab3c3466c6bd72ef42f7773c5fa224db4fb7cd6a9a5588ebe46642a15abf5
+      environment:
+          - discovery.type=single-node
+#          - bootstrap.memory_lock=true
+      ports:
+          - 9200:9200
