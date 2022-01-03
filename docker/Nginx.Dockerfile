@@ -1,3 +1,3 @@
 FROM nginx
-COPY conf/vhost.conf /etc/nginx/conf.d/default.conf
+COPY nginx.conf /etc/nginx
 WORKDIR /var/www/elasticProject
